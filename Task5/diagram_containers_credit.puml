@@ -1,0 +1,56 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+top to bottom direction
+
+Person(client, "Клиент", "Использует банковские услуги")
+
+System_Boundary(front, "Front office") {
+    Person(front_office_manager, "Сотрудник фронт-офиса", "Работает с клиентами")
+    Container(site, "Сайт", "Маркетинг + Открытие кредита", "PHP, React.js")
+    Container(internet_bank_api_gateway, "Интернет-банк (Gateway)")
+    Container(internet_bank, "Интернет-банк", "Платежи, дебетовая карта", "ASP.NET MVC 4.5, MS SQL")
+    Container(credit_service, "Сервис кредитов интернет-банка", "Управление кредитами", "Java Spring Boot")
+}
+
+System_Boundary(back, "Back office") {
+    Person(back_office_manager, "Сотрудник бэк-офиса", "Работает с финансовыми операциями")
+    Container(abs, "АБС", "Банковские операции", "Delphi, Oracle")
+    Container(sms_gate, "SMS-шлюз", "Отправка SMS-уведомлений клиентам")
+    Container(credit_conveyor, "Кредитный конвеер")
+    Container(credit_scoring, "Кредитный скоринг")
+}
+
+System_Boundary(call_center_system, "Call-центр") {
+    Person(call_center_manager, "Сотрудник call-центра", "Консультирует клиентов")
+    Container(bank_call_center, "Call-центр банка", "Обработка обращений клиентов", "React.js, Java Spring Boot, PostgreSQL")
+    System_Ext(partner_call_center, "Партнерский call-центр", "Аутсорсинг call-center")
+}
+Container(kafka, "Kafka")
+System_Ext(telecom_operator, "Телеком-оператор", "Отправка SMS клиентам")
+
+Rel(client, site, "Подает заявку на кредит")
+Rel(client, internet_bank_api_gateway, "Подает заявку на кредит")
+Rel(client, front_office_manager, "Подает заявку на кредит")
+Rel(client, call_center_manager, "Подает заявку на кредит")
+
+Rel(site, credit_service, "Проксирует заявки на кредит", "API")
+Rel(internet_bank_api_gateway, credit_service, "Проксирует заявки на кредит", "API")
+Rel(internet_bank_api_gateway, internet_bank, "Проксирует старый функционал интернет-банка", "API")
+Rel(abs, credit_service, "Ставки по кредитам")
+
+Rel(front_office_manager, credit_service, "Создает заявку на кредит", "API")
+Rel(call_center_manager, abs, "Создает заявку на кредит", "API")
+Rel(credit_service, kafka, "Публикует запрос на кредит в топик Kafka")
+Rel(kafka, abs, "Подписка на сообщения Kafka с запросами на кредит")
+Rel(abs, credit_conveyor, "Заявка на кредит")
+Rel(credit_conveyor, back_office_manager, "Заявка на кредит")
+Rel(back_office_manager, credit_scoring, "Получает данные скоринга по заявке")
+Rel(back_office_manager, abs, "Выполняет финансовые операции")
+Rel(abs, sms_gate, "Инициирует SMS-уведомления")
+Rel(sms_gate, telecom_operator, "SMS-уведомления")
+Rel(telecom_operator, client, "SMS-уведомления")
+Rel(abs, bank_call_center, "Уведомление о заявке, заведенной через сайт")
+Rel(call_center_manager, client, "Уточнение деталей заявки, созданной через сайт")
+
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Клиент")
+Person(front_office, "Фронт-офис")
+Person(back_office, "Бэк-офис")
+
+System(bank, "Банк Стандарт")
+System_Ext(telecom_operator, "Телеком-оператор")
+System_Ext(partner_call_center, "Партнерский call-центр")
+
+Rel(client, bank, "Обращение на оформление депозита")
+Rel(front_office, bank, "Работа с клиентами")
+Rel(back_office, bank, "Финансовые операции")
+Rel(bank, telecom_operator, "SMS-уведомления")
+Rel(bank, partner_call_center, "Передача обращений")
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(abs_admin, "Администратор АБС", "Управляет ставками")
+Person(call_center_agent, "Менеджер кол-центра", "Работает с клиентами")
+
+System_Boundary(bank, "Банк «Стандарт»") {
+    Container(abs, "Сервис интеграции депозитов АБС", "Oracle, PL/SQL", "Источник ставок: таблица deposit_rates")
+    Container(kafka, "Kafka", "Apache Kafka", "Топик: deposit-rates")
+    Container(rate_cache_service, "Rate Cache Service", "Java, Spring Boot", "Подписывается на Kafka, обновляет Redis")
+    ContainerDb(redis, "Redis", "Кэш ставок", "Для быстрого доступа")
+    Container(file_exporter, "File Exporter", "Java", "Генерирует файл, отправляет на SFTP")
+    Container(sftp_gateway, "SFTP-шлюз", "JSch", "Безопасная передача файла")
+}
+
+System_Boundary(partner, "Партнёрский кол-центр") {
+    System_Ext(cc_partner, "Система партнёра", "Импортирует файл со ставками")
+}
+
+Rel(abs_admin, abs, "Обновляет ставки")
+Rel(abs, kafka, "Публикует событие 'ставка изменена'")
+Rel(kafka, rate_cache_service, "Событие: update-deposit-rate")
+Rel(rate_cache_service, redis, "Обновляет кэш")
+Rel(kafka, file_exporter, "Событие: update-deposit-rate")
+Rel(file_exporter, sftp_gateway, "Отправляет файл (CSV)")
+Rel(sftp_gateway, cc_partner, "SFTP-передача")
+Rel(call_center_agent, rate_cache_service, "GET /api/rates", "REST")
+Rel(rate_cache_service, call_center_agent, "Возвращает актуальные ставки")
+
+@enduml
