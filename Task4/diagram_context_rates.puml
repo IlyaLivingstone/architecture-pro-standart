@@ -1,0 +1,16 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(customer_support, "Менеджер кол-центра", "Консультирует клиентов")
+Person(abs_admin, "Администратор АБС", "Управляет ставками")
+
+System(abs_deposit_integration_service, "Сервис интеграции депозитов АБС", "Хранение и управление ставками")
+System(call_center_internal, "Кол-центр банка", "Обработка обращений клиентов")
+System(call_center_partner, "Партнёрский кол-центр", "Аутсорсинг поддержки")
+
+Rel(abs_admin, abs_deposit_integration_service, "Обновляет ставки по депозитам")
+Rel(abs_deposit_integration_service, call_center_internal, "Предоставляет актуальные ставки", "API / Kafka")
+Rel(abs_deposit_integration_service, call_center_partner, "Передаёт файл с актуальными ставками", "SFTP")
+Rel(call_center_internal, customer_support, "Отображает ставки в интерфейсе")
+
+@enduml
